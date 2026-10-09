@@ -1,11 +1,10 @@
-"""Configuración específica por algoritmo y controles compactos de reproducción."""
+"""Configuración y controles de reproducción de Dijkstra."""
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QSlider, QSizePolicy, QTabWidget, QVBoxLayout, QWidget
-from algoritmos.registro import ALGORITMOS
-from .configuraciones import CONFIGURACIONES
+from PyQt6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QSlider, QSizePolicy, QVBoxLayout, QWidget
+from .configuracion import ConfiguracionDijkstra
 
 
-class PanelBusqueda(QWidget):
+class PanelDijkstra(QWidget):
     parametros_cambiados = pyqtSignal()
 
     def __init__(self, parent=None):
@@ -13,18 +12,13 @@ class PanelBusqueda(QWidget):
         self.setFixedWidth(290)
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        titulo = QLabel('Búsqueda de ruta')
+        titulo = QLabel('Configuración de Dijkstra')
         titulo.setObjectName('titulo')
         layout.addWidget(titulo)
-        self.pestanas = QTabWidget()
-        self.pestanas.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        self.configuraciones = {}
-        for algoritmo in ALGORITMOS:
-            configuracion = CONFIGURACIONES[algoritmo.identificador]()
-            configuracion.cambiada.connect(self.parametros_cambiados)
-            self.configuraciones[algoritmo.identificador] = configuracion
-            self.pestanas.addTab(configuracion, algoritmo.nombre)
-        layout.addWidget(self.pestanas)
+        self.configuracion = ConfiguracionDijkstra()
+        self.configuracion.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.configuracion.cambiada.connect(self.parametros_cambiados)
+        layout.addWidget(self.configuracion)
         self.compatibilidad = QLabel()
         self.compatibilidad.setWordWrap(True)
         layout.addWidget(self.compatibilidad)
@@ -57,10 +51,6 @@ class PanelBusqueda(QWidget):
         layout.addWidget(leyenda)
         layout.addStretch()
         self.limpiar()
-
-    @property
-    def configuracion(self):
-        return self.pestanas.currentWidget()
 
     @property
     def origen(self):

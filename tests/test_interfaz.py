@@ -31,7 +31,7 @@ class InterfazTests(unittest.TestCase):
         self.app.processEvents()
 
     def test_solo_lectura_colores_y_posiciones(self):
-        w = self.ventana
+        w = self.ventana.interfaz_actual
         self.assertEqual(len(w.escena.nodos), 30)
         self.assertEqual(len(w.escena.aristas), 64)
         for nodo, item in w.escena.nodos.items():
@@ -50,7 +50,7 @@ class InterfazTests(unittest.TestCase):
         self.assertEqual(w.panel.destino.text(), '10')
 
     def test_todos_los_pasos_y_ruta_final(self):
-        w = self.ventana
+        w = self.ventana.interfaz_actual
         w.panel.buscar.click()
         w.reproductor.pausar()
         resultado = w.reproductor.resultado
@@ -76,7 +76,7 @@ class InterfazTests(unittest.TestCase):
         self.assertEqual(w.panel.resultado.text(), 'Costo final: —')
 
     def test_animacion_pausa_velocidad_y_cancelacion(self):
-        w = self.ventana
+        w = self.ventana.interfaz_actual
         w.buscar()
         w.reproductor.duracion = 45
         QTest.qWait(180)
@@ -96,10 +96,10 @@ class InterfazTests(unittest.TestCase):
         self.assertFalse(w.panel.play.isEnabled())
 
     def test_grafo_negativo_bloqueado_y_pesos_ocultos(self):
-        w = self.ventana
+        w = self.ventana.interfaz_actual
         w.buscar()
         w.pesos.setChecked(False)
-        w.selector_grafo.setCurrentIndex(0)
+        self.ventana.selector_grafo.setCurrentIndex(0)
         self.assertFalse(w.panel.buscar.isEnabled())
         self.assertFalse(w.reproductor.timer.isActive())
         self.assertIsNone(w.reproductor.resultado)
@@ -107,12 +107,12 @@ class InterfazTests(unittest.TestCase):
         self.assertIsNone(w.reproductor.resultado)
         self.assertTrue(all(not a.etiqueta.isVisible() for a in w.escena.aristas.values()))
         self.assertEqual(w.grafo[66][13][0]['weight'], -777)
-        w.selector_grafo.setCurrentIndex(1)
+        self.ventana.selector_grafo.setCurrentIndex(1)
         self.assertTrue(w.panel.buscar.isEnabled())
         self.assertEqual(w.grafo[66][13][0]['weight'], 777)
 
     def test_aristas_paralelas_y_animacion_en_sentido_correcto(self):
-        w = self.ventana
+        w = self.ventana.interfaz_actual
         w.panel.origen.setText('12')
         w.panel.destino.setText('16')
         w.buscar()
@@ -143,14 +143,14 @@ class InterfazTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as carpeta:
             destino = str(Path(carpeta) / 'grafo.png')
             with patch.object(QFileDialog, 'getSaveFileName', return_value=(destino, 'PNG')):
-                self.ventana.guardar_png()
+                self.ventana.interfaz_actual.guardar_png()
             imagen = QImage(destino)
             self.assertFalse(imagen.isNull())
             self.assertEqual(imagen.pixelColor(0, 0).name(), FONDO)
 
 
     def test_alertas_de_validacion_y_no_inicia_busqueda(self):
-        w = self.ventana
+        w = self.ventana.interfaz_actual
         casos = [('999', '10', 'Nodo origen no existe.'),
                  ('17', '999', 'Nodo destino no existe.'),
                  ('999', '888', 'Nodo origen y destino no existen.'),
@@ -172,7 +172,7 @@ class InterfazTests(unittest.TestCase):
         self.assertEqual(w.reproductor.resultado.distancia, 13)
 
     def test_visitados_oscuros_y_solo_actual_neon(self):
-        w = self.ventana
+        w = self.ventana.interfaz_actual
         w.buscar()
         w.reproductor.pausar()
         resultado = w.reproductor.resultado
@@ -192,7 +192,7 @@ class InterfazTests(unittest.TestCase):
                     self.assertEqual(item.brush().color().name(), NODO)
 
     def test_desplegable_y_configuracion_en_posicion_fija(self):
-        w = self.ventana
+        w = self.ventana.interfaz_actual
         antes = w.panel.mapTo(w, w.panel.rect().topLeft())
         self.assertEqual(w.matrices.contenido.maximumHeight(), 0)
         w.matrices.boton.click()
@@ -211,7 +211,7 @@ class InterfazTests(unittest.TestCase):
         self.assertAlmostEqual(w.vista.transform().m11(), escala)
 
     def test_registro_matricial_pulso_retroceso_y_reset(self):
-        w = self.ventana
+        w = self.ventana.interfaz_actual
         w.buscar()
         w.reproductor.pausar()
         resultado = w.reproductor.resultado
@@ -242,7 +242,7 @@ class InterfazTests(unittest.TestCase):
         self.assertFalse(w.matrices.modelo_incidencia.consultadas)
 
     def test_matrices_sin_edicion_y_pesos_originales(self):
-        w = self.ventana
+        w = self.ventana.interfaz_actual
         ady, inc = w.matrices.modelo_adyacencia, w.matrices.modelo_incidencia
         self.assertEqual((ady.rowCount(), ady.columnCount()), (30, 30))
         self.assertEqual((inc.rowCount(), inc.columnCount()), (30, 64))
@@ -250,13 +250,13 @@ class InterfazTests(unittest.TestCase):
         self.assertEqual(ady.data(indice), '2')
         self.assertFalse(ady.flags(indice) & Qt.ItemFlag.ItemIsEditable)
         self.assertIn('16, 3', ady.data(indice, Qt.ItemDataRole.ToolTipRole))
-        w.selector_grafo.setCurrentIndex(0)
+        self.ventana.selector_grafo.setCurrentIndex(0)
         indice = ady.index(ady.filas[66], ady.filas[13])
         self.assertIn('-777', ady.data(indice, Qt.ItemDataRole.ToolTipRole))
 
 
     def test_cruces_completas_y_pulso_sin_modificar_matrices(self):
-        w = self.ventana
+        w = self.ventana.interfaz_actual
         w.buscar()
         w.reproductor.pausar()
         resultado = w.reproductor.resultado
@@ -276,7 +276,7 @@ class InterfazTests(unittest.TestCase):
             self.assertEqual(modelo.valores, valores)
 
     def test_ruta_parpadea_cinco_veces_y_permanece_fosforescente(self):
-        w = self.ventana
+        w = self.ventana.interfaz_actual
         w.buscar()
         w.reproductor.pausar()
         fases, finales = [], []
@@ -301,7 +301,7 @@ class InterfazTests(unittest.TestCase):
             self.assertEqual(w.escena.nodos[nodo].brush().color().name(), VISITADO)
 
     def test_parpadeo_real_y_cancelacion(self):
-        w = self.ventana
+        w = self.ventana.interfaz_actual
         w.buscar()
         w.reproductor.pausar()
         ultimo = len(w.reproductor.resultado.pasos) - 1
@@ -321,7 +321,7 @@ class InterfazTests(unittest.TestCase):
         w.buscar()
         w.reproductor.pausar()
         w.reproductor.mostrar(len(w.reproductor.resultado.pasos) - 1)
-        w.selector_grafo.setCurrentIndex(0)
+        self.ventana.selector_grafo.setCurrentIndex(0)
         self.assertFalse(w.celebracion.timer.isActive())
 
 

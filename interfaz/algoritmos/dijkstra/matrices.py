@@ -1,4 +1,4 @@
-"""Panel inferior desplegable con dos matrices y registro visual de búsqueda."""
+"""Matrices y registro visual del recorrido de Dijkstra."""
 from PyQt6.QtCore import QEasingCurve, QPropertyAnimation, Qt
 from PyQt6.QtWidgets import (
     QAbstractItemView, QFrame, QHBoxLayout, QLabel, QLayout, QSizePolicy,
@@ -8,7 +8,7 @@ from modelos.matrices import construir_matrices
 from .modelo_matriz import ModeloMatriz
 
 
-class PanelMatrices(QWidget):
+class PanelMatricesDijkstra(QWidget):
     def __init__(self, grafo, parent=None):
         super().__init__(parent)
         self.datos = construir_matrices(grafo)

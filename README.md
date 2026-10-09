@@ -15,8 +15,8 @@ Selecciona **Pesos positivos**, la pestaña **Dijkstra** y pulsa **Buscar y anim
 - La búsqueda se calcula con una implementación propia; NetworkX solo almacena nodos y aristas.
 - La animación reproduce los eventos reales: elegir el nodo de menor distancia, examinar cada arista, actualizar o descartar un candidato y reconstruir la ruta.
 - Origen y destino se introducen como texto. Se valida la existencia de ambos nodos y se muestra una alerta específica si falta el origen, el destino o ambos. Los campos vacíos o no numéricos también se rechazan.
-- La configuración del algoritmo permanece a la derecha. Cada algoritmo tiene su propio formulario en `interfaz/configuraciones.py`.
-- La barra inferior del área del grafo despliega, con una transición, las matrices de adyacencia e incidencia. Sustituyen el historial textual y la tabla de distancias.
+- La configuración de Dijkstra permanece a la derecha de su propia pestaña. Su formulario está en `interfaz/algoritmos/dijkstra/configuracion.py`. Los futuros algoritmos tendrán interfaces completas independientes.
+- La barra inferior de la interfaz de Dijkstra despliega, con una transición, sus matrices de adyacencia e incidencia. Sustituyen el historial textual y la tabla de distancias.
 - Las matrices conservan el registro visual de las aristas consultadas hasta el paso actual. El recorrido activo se resalta en cruz: fila completa del nodo actual y columna completa del vecino (adyacencia) o de la arista (incidencia), incluidas las celdas con cero. La cruz pulsa como una unidad con la animación. Retroceder reconstruye el registro; reiniciar o cambiar parámetros lo limpia.
 - La búsqueda se detiene cuando el destino tiene su distancia definitiva.
 - Reproducir/pausar, paso anterior/siguiente, reiniciar y velocidad funcionan sobre el mismo registro. Cambiar el grafo o los extremos cancela el registro anterior.
@@ -44,20 +44,25 @@ algoritmos/
   dijkstra.py             Búsqueda propia, sin Qt ni NetworkX
   registro.py             Catálogo y requisitos de los algoritmos
 interfaz/
-  ventana.py              Coordinación de la aplicación
-  panel.py                Controles compactos de búsqueda
-  configuraciones.py      Formulario específico de cada algoritmo
-  matrices.py             Panel inferior desplegable
-  modelo_matriz.py         Modelos de tablas y registro visual de eventos
-  escena.py               Dibujo de aristas y representación de estados
+  ventana.py              Contenedor: selector de grafo y pestañas
+  base.py                 Contrato mínimo de una interfaz independiente
+  registro.py             Relación algoritmo → interfaz completa
+  algoritmos/dijkstra/
+    vista.py              Coordinación exclusiva de Dijkstra
+    configuracion.py      Parámetros y validación de Dijkstra
+    panel.py              Controles de reproducción de Dijkstra
+    matrices.py           Panel inferior de matrices de Dijkstra
+    modelo_matriz.py      Modelos y recorrido en cruz de Dijkstra
+  escena.py               Dibujo del grafo, reutilizable si se desea
   nodos.py                Elementos gráficos de nodos y etiquetas
-  reproductor.py          Tiempo, animación y navegación de pasos
-  celebracion.py           Cinco parpadeos de la ruta ganadora
+  reproductor.py          Reproducción de pasos, reutilizable si se desea
+  celebracion.py          Cinco parpadeos de la ruta ganadora
   tema.py                 Paleta y estilos
 tests/
-  test_dijkstra.py         Verificación matemática de la búsqueda
-  test_interfaz.py         Integración de la interfaz sin pantalla
-  test_matrices.py         Convenciones de matrices y validación
+  test_dijkstra.py        Verificación matemática de la búsqueda
+  test_interfaz.py        Interfaz de Dijkstra sin pantalla
+  test_interfaces.py      Independencia de las interfaces por algoritmo
+  test_matrices.py        Convenciones de matrices y validación
 ```
 
 Se aplicó la separación entre datos, presentación e interacción descrita en la [documentación de Qt sobre modelo/vista](https://doc.qt.io/qt-6/model-view-programming.html). La lógica del algoritmo recibe una lista de adyacencia, no objetos gráficos. Los pasos contienen copias de las distancias y predecesores para que la reproducción no cambie estados anteriores.
@@ -70,7 +75,7 @@ Por ahora solo está implementado Dijkstra. Para incorporar cada uno de los otro
 
 1. Crear su módulo en `algoritmos/`, con una función que reciba `(adyacencia, origen, destino)` y devuelva `Resultado` con eventos `Paso`.
 2. Añadir una entrada `Algoritmo` en `registro.py`, declarando `acepta_negativos`.
-3. Crear su configuración en `interfaz/configuraciones.py` y registrarla en `CONFIGURACIONES`. Cada formulario emite `cambiada` y devuelve sus parámetros validados mediante `parametros(grafo)`. La pestaña se crea desde el registro del algoritmo. El reproductor y el dibujo consumen el mismo contrato de pasos.
+3. Crear una interfaz completa en `interfaz/algoritmos/<nombre>/`, derivada de `InterfazAlgoritmo`. Su constructor recibe `(grafo, algoritmo, parent=None)` y debe implementar `cargar_grafo(grafo)` y `detener()`. Registrar su clase en `INTERFACES`, en `interfaz/registro.py`. Cada algoritmo decide sus formularios, tablas, matrices y animaciones; no hereda el panel ni las matrices de Dijkstra. Los componentes gráficos comunes son opcionales. La ventana general solo crea pestañas, entrega el grafo y detiene la interfaz al cambiar de pestaña.
 4. Añadir pruebas de sus requisitos, caminos y casos sin solución.
 
 Dijkstra requiere pesos no negativos; la interfaz bloquea su ejecución en el grafo original y el algoritmo valida también esta condición. Bellman–Ford admite pesos negativos, pero debe detectar ciclos negativos. El grafo original es **no dirigido**: una arista negativa permite recorrerla de ida y vuelta disminuyendo indefinidamente el costo, por lo que en ese caso no existe un mínimo finito. Una futura implementación deberá informar esa situación; no basta con habilitar el grafo original. Véase la [documentación de Bellman–Ford y ciclos negativos](https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.shortest_paths.weighted.bellman_ford_predecessor_and_distance.html).
@@ -81,7 +86,7 @@ Dijkstra requiere pesos no negativos; la interfaz bloquea su ejecución en el gr
 QT_QPA_PLATFORM=offscreen .venv/bin/python -m unittest discover -s tests -v
 ```
 
-26 pruebas: ruta 17→10, comparación de los 900 pares contra un oráculo independiente Floyd–Warshall, empates, aristas paralelas, pesos cero, bucles, entradas desactualizadas de la cola, destino inalcanzable, origen igual al destino, validación de pesos/nodos, integridad de instantáneas, controles de reproducción, cancelación al cambiar parámetros, colores de nodos visitados/actuales, posiciones, exportación PNG, alertas de extremos inexistentes, despliegue del panel inferior, persistencia del zoom manual, integridad de ambas matrices y registro sincronizado al avanzar/retroceder, cruces completas, cinco ciclos exactos de parpadeo y cancelación de la celebración.
+27 pruebas: ruta 17→10, comparación de los 900 pares contra un oráculo independiente Floyd–Warshall, empates, aristas paralelas, pesos cero, bucles, entradas desactualizadas de la cola, destino inalcanzable, origen igual al destino, validación de pesos/nodos, integridad de instantáneas, controles de reproducción, cancelación al cambiar parámetros, colores de nodos visitados/actuales, posiciones, exportación PNG, alertas de extremos inexistentes, despliegue del panel inferior, persistencia del zoom manual, integridad de ambas matrices y registro sincronizado al avanzar/retroceder, cruces completas, cinco ciclos exactos de parpadeo y cancelación de la celebración e independencia frente a una segunda interfaz de prueba con controles distintos y sin matrices.
 
 Las pruebas de interfaz se ejecutan sin pantalla. Para usar la aplicación interactiva se necesita una sesión gráfica.
 
@@ -95,3 +100,10 @@ Las pruebas de interfaz se ejecutan sin pantalla. Para usar la aplicación inter
 
 Todas las transcripciones y posiciones se pueden editar en `POSICIONES` y `ARISTAS`.
 
+
+## Contributors
+
+- [KirbyStone69](https://github.com/KirbyStone69): autor del proyecto y responsable del repositorio.
+- **OpenAI Codex**: asistencia en implementación, estructura de interfaces y pruebas.
+
+Este crédito es explícito en la documentación y en el mensaje del commit (`Assisted-by: OpenAI Codex`). La lista automática de Contributors de GitHub vincula autores y coautores a cuentas por su correo; no depende de quién ejecuta el push. Un crédito textual a Codex no garantiza una cuenta en esa lista. Véanse [Contributors de GitHub](https://docs.github.com/en/repositories/viewing-activity-and-data-for-your-repository/viewing-a-projects-contributors) y [commits con coautores](https://docs.github.com/en/pull-requests/how-tos/commit-changes/creating-a-commit-with-multiple-authors).

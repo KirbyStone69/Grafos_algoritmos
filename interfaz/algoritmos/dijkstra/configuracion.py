@@ -1,4 +1,4 @@
-"""Cada algoritmo define sus propios campos y su validación de parámetros."""
+"""Campos y validación de parámetros exclusivos de Dijkstra."""
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import QFormLayout, QLabel, QLineEdit, QWidget
 from modelos.validacion import validar_extremos
@@ -24,6 +24,3 @@ class ConfiguracionDijkstra(QWidget):
     def parametros(self, grafo):
         origen, destino = validar_extremos(grafo, self.origen.text(), self.destino.text())
         return {'origen': origen, 'destino': destino}
-
-
-CONFIGURACIONES = {'dijkstra': ConfiguracionDijkstra}

@@ -2,7 +2,7 @@
 import math
 from PyQt6.QtCore import QAbstractTableModel, QModelIndex, Qt
 from PyQt6.QtGui import QBrush, QColor, QFont
-from .tema import FONDO, NEON, TEXTO, VISITADO
+from ...tema import FONDO, NEON, TEXTO, VISITADO
 
 
 def identidad(arista):
