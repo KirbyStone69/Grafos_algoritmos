@@ -39,7 +39,7 @@ class InterfacesTests(unittest.TestCase):
         # Esta entrada solo existe en la prueba: no anuncia un algoritmo ficticio.
         especificacion = Algoritmo('prueba', 'Otro diseño', True, lambda *_: None)
         fabricas = dict(INTERFACES, prueba=InterfazDePrueba)
-        w = VentanaGrafo(ALGORITMOS + (especificacion,), fabricas)
+        w = VentanaGrafo(ALGORITMOS[:1] + (especificacion,), fabricas)
         try:
             dijkstra = w.interfaz_actual
             self.assertTrue(dijkstra.isAncestorOf(dijkstra.panel))

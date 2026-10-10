@@ -14,6 +14,7 @@ class VentanaGrafo(QMainWindow):
         self.grafos = cargar_grafos()
         self.grafo = self.grafos['positivo']
         self._indice_anterior = 0
+        self.algoritmos = tuple(algoritmos)
         fabricas = INTERFACES if interfaces is None else interfaces
         central = QWidget()
         self.setCentralWidget(central)
@@ -32,7 +33,7 @@ class VentanaGrafo(QMainWindow):
         barra.addStretch()
         layout.addLayout(barra)
         self.pestanas = QTabWidget()
-        for algoritmo in algoritmos:
+        for algoritmo in self.algoritmos:
             interfaz = fabricas[algoritmo.identificador](self.grafo, algoritmo)
             interfaz.mensaje.connect(lambda texto: self.statusBar().showMessage(texto, 5000))
             self.pestanas.addTab(interfaz, algoritmo.nombre)
@@ -55,6 +56,10 @@ class VentanaGrafo(QMainWindow):
         if anterior is not None:
             anterior.detener()
         self._indice_anterior = indice
+        self.statusBar().showMessage(f'{self.algoritmos[indice].nombre} · Rueda: zoom · Arrastrar: desplazar')
+        preferido = self.algoritmos[indice].grafo_preferido
+        if preferido is not None:
+            self.selector_grafo.setCurrentIndex(self.selector_grafo.findData(preferido))
 
     def closeEvent(self, event):
         for indice in range(self.pestanas.count()):
