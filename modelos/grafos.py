@@ -1,10 +1,15 @@
 """Adaptador: NetworkX almacena los datos; los algoritmos reciben adyacencia."""
 from grafo import crear_grafo, crear_grafo_positivo
+from grafo_dirigido_bf import crear_grafo_dirigido_bf
 from algoritmos.tipos import Conexion
 
 
 def cargar_grafos():
-    return {'original': crear_grafo(), 'positivo': crear_grafo_positivo()}
+    return {
+        'original': crear_grafo(),
+        'positivo': crear_grafo_positivo(),
+        'dirigido_bf': crear_grafo_dirigido_bf(),
+    }
 
 
 def obtener_adyacencia(grafo):

@@ -1,0 +1,91 @@
+﻿"""Panel de controles de A*."""
+from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtWidgets import (QHBoxLayout, QLabel, QPushButton,
+                              QSlider, QSizePolicy, QVBoxLayout, QWidget)
+from .configuracion import ConfiguracionAEstrella
+
+
+class PanelAEstrella(QWidget):
+    parametros_cambiados = pyqtSignal()
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFixedWidth(290)
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        titulo = QLabel('Configuracion de A*')
+        titulo.setObjectName('titulo')
+        layout.addWidget(titulo)
+        self.configuracion = ConfiguracionAEstrella()
+        self.configuracion.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.configuracion.cambiada.connect(self.parametros_cambiados)
+        layout.addWidget(self.configuracion)
+        self.compatibilidad = QLabel()
+        self.compatibilidad.setWordWrap(True)
+        layout.addWidget(self.compatibilidad)
+        self.buscar = QPushButton('Buscar y animar')
+        layout.addWidget(self.buscar)
+        navegacion = QHBoxLayout()
+        self.atras = QPushButton('←')
+        self.play = QPushButton('Reproducir')
+        self.adelante = QPushButton('→')
+        self.reiniciar = QPushButton('↺')
+        for boton, ayuda in [(self.atras, 'Paso anterior'), (self.play, 'Reproducir / pausar'),
+                              (self.adelante, 'Paso siguiente'), (self.reiniciar, 'Reiniciar')]:
+            boton.setToolTip(ayuda)
+            navegacion.addWidget(boton)
+        layout.addLayout(navegacion)
+        layout.addWidget(QLabel('Velocidad de reproduccion'))
+        self.velocidad = QSlider(Qt.Orientation.Horizontal)
+        self.velocidad.setRange(1, 10)
+        self.velocidad.setValue(7)
+        layout.addWidget(self.velocidad)
+        self.estado = QLabel()
+        self.estado.setObjectName('estado')
+        self.estado.setWordWrap(True)
+        layout.addWidget(self.estado)
+        self.resultado = QLabel()
+        self.resultado.setWordWrap(True)
+        layout.addWidget(self.resultado)
+        leyenda = QLabel(
+            'Lista ABIERTA: nodos por explorar\n'
+            'Lista CERRADA: nodos ya expandidos\n'
+            '● Cerrado: verde oscuro\n'
+            '◉ Actual: borde neon\n'
+            '● Ruta ganadora: fosforescente'
+        )
+        leyenda.setWordWrap(True)
+        layout.addWidget(leyenda)
+        layout.addStretch()
+        self.limpiar()
+
+    @property
+    def origen(self):
+        return self.configuracion.origen
+
+    @property
+    def destino(self):
+        return self.configuracion.destino
+
+    def controles(self, cargado):
+        for boton in (self.atras, self.play, self.adelante, self.reiniciar):
+            boton.setEnabled(cargado)
+
+    def limpiar(self):
+        self.controles(False)
+        self.estado.setText('Listo para buscar')
+        self.resultado.setText('Costo final: -')
+        self.play.setText('Reproducir')
+
+    def mostrar(self, indice, paso, resultado):
+        actual = str(paso.actual) if paso.actual is not None else '-'
+        self.estado.setText(f'Paso {indice+1}/{len(resultado.pasos)} | Nodo: {actual}')
+        self.atras.setEnabled(indice > 0)
+        self.adelante.setEnabled(indice < len(resultado.pasos) - 1)
+        if paso.tipo == 'fin':
+            self.resultado.setText(
+                f'Costo: {resultado.distancia:g}\n' + ' -> '.join(map(str, resultado.ruta)))
+        elif paso.tipo == 'sin_ruta':
+            self.resultado.setText('Destino inalcanzable')
+        else:
+            self.resultado.setText('Costo final: -')

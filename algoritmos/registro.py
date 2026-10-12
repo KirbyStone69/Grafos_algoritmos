@@ -8,6 +8,7 @@ from typing import Callable
 from .dijkstra import ejecutar_dijkstra
 from .bellman_ford import ejecutar_bellman_ford
 from .warshall_floyd import ejecutar_warshall_floyd
+from .a_estrella import ejecutar_a_estrella
 
 
 @dataclass(frozen=True)
@@ -21,6 +22,7 @@ class Algoritmo:
 
 ALGORITMOS = (
     Algoritmo('dijkstra', 'Dijkstra', False, ejecutar_dijkstra, 'positivo'),
-    Algoritmo('bellman_ford', 'Bellman–Ford', True, ejecutar_bellman_ford, 'original'),
+    Algoritmo('bellman_ford', 'Bellman–Ford', True, ejecutar_bellman_ford, 'dirigido_bf'),
     Algoritmo('warshall_floyd', 'Floyd–Warshall', True, ejecutar_warshall_floyd, 'positivo'),
+    Algoritmo('a_estrella', 'A*', False, ejecutar_a_estrella, 'positivo'),
 )
